@@ -1,0 +1,1 @@
+(import ./default.nix).project.haskell-nix
