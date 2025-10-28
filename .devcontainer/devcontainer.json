@@ -1,0 +1,47 @@
+{
+  "name": "reflex-dom-dropdown (Nix Debian)",
+  "dockerFile": "Dockerfile",
+  "context": "${localWorkspaceFolder}",
+  "platform": "linux/amd64",
+  "build": {
+    "args": {
+      "USER_UID": "${localEnv:USER_UID}",
+      "USER_GID": "${localEnv:USER_GID}"
+    }
+  },
+
+  "runArgs": [
+    "--platform=linux/amd64",
+    "--security-opt",
+    "label=disable"
+  ],
+  "mounts": [
+    "source=nix-store-amd64,target=/nix,type=volume"
+    ,"type=bind,source=${localWorkspaceFolder}/.devcontainer/etc-nix,target=/etc/nix,consistency=cached"
+  ],
+  "remoteUser": "code",
+
+  "containerEnv": {
+    "PRELOAD_EXTENSIONS": "arrterian.nix-env-selector"
+  },
+
+  "overrideCommand": false,
+  "userEnvProbe": "loginShell",
+  "updateRemoteUserUID": false,
+
+  "onCreateCommand": "nix-shell --command 'echo done building nix dev environment'",
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "arrterian.nix-env-selector",
+        "jnoortheen.nix-ide",
+        "haskell.haskell",
+        // "DigitalAssetHoldingsLLC.daml@2.6.4",
+        "mkhl.direnv"
+      ]
+    }
+  },
+
+  "forwardPorts": []
+}

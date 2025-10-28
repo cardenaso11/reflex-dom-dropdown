@@ -23,8 +23,14 @@ in {
 
   shell = {
     crossPlatforms = ps: with ps; [ ghcjs ];
-    packages = ps: with ps; [ reflex-dom-lazy ];
+    packages = ps: with ps; [
+      reflex-dom-lazy
+    ];
     withHaddock = false;
     withHoogle = false;
+    tools = {
+      haskell-language-server = {};
+    };
+    inputsFrom = [];
   };
 }
