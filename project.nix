@@ -29,7 +29,7 @@ in {
       reflex-dom-lazy
     ];
     withHaddock = false;
-    withHoogle = true;
+    withHoogle = false;
     tools = {
       haskell-language-server = {};
     };
@@ -62,12 +62,14 @@ in {
         fi
       ''
     );
+    #TODO: Move this elsewhere?
     inputsFrom = [(pkgs.mkShell {
       packages = [
         pkgs.nil
         pkgs.direnv
         pkgs.nix-direnv
         obelisk
+        pkgs.github-cli
       ];
     })];
   };

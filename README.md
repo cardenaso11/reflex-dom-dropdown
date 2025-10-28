@@ -18,7 +18,7 @@ and works as though the entire list is rendered.
 > {-# Language RecursiveDo #-}
 > import Reflex.Dom
 > import Reflex.Dom.Attrs
-> import Reflex.Dom.Lazy.List
+> import Reflex.Dom.Dropdown
 > import Reflex.Dom.Tables
 > import qualified Data.Map as Map
 > import qualified Data.Text as T

@@ -3,7 +3,7 @@
 {-# Language OverloadedStrings #-}
 {-# Language RecursiveDo #-}
 {-# Language ScopedTypeVariables #-}
-module Reflex.Dom.Lazy.List where
+module Reflex.Dom.Dropdown where
 
 import Control.Monad.Fix
 import Control.Monad.IO.Class
@@ -14,7 +14,27 @@ import Data.Text (Text)
 import qualified GHCJS.DOM.Element as JS
 import Language.Javascript.JSaddle
 import Reflex.Dom.Attrs
-import Reflex.Dom.Core hiding (Attrs)
+import Reflex.Dom.Core
+    ( DomBuilder(DomBuilderSpace),
+      MonadHold(holdDyn),
+      PostBuild(..),
+      PerformEvent(performEvent, Performable),
+      TriggerEvent,
+      Reflex(current, Dynamic),
+      Element(_element_raw),
+      HasDomEvent(domEvent),
+      EventName(Scroll),
+      el,
+      text,
+      ffor,
+      (=:),
+      elDynAttr,
+      debounce,
+      leftmost,
+      attach,
+      simpleList,
+      display,
+      DomSpace(RawElement) )
 
 -- | Information about the current scroll state of a lazy list
 data ScrollInfo = ScrollInfo
@@ -47,6 +67,10 @@ data LazyListConfig t m = LazyListConfig
   -- need to ensure that parent elements are not providing their own scroll bar
   -- (including the <body> element). The size of this element will be
   -- considered the viewport size for rendering purposes.
+  }
+
+data PopupConfig t = PopupConfig
+  { _popupConfig_visible :: Dynamic t Bool
   }
 
 data LazyList t = LazyList
@@ -140,3 +164,30 @@ lazyListWindow scrollInfo listElems =
     first = fmap _scrollInfo_topIndex scrollInfo
     renderElems = Map.take <$> numberElems <*> (Map.drop <$> ((subtract 1) <$> first) <*> listElems)
   in renderElems
+
+popup
+  :: ( DomBuilder t m
+     , MonadFix m
+     , MonadHold t m
+     , PostBuild t m
+     , PerformEvent t m
+     , TriggerEvent t m
+     , MonadIO (Performable m)
+     , MonadJSM (Performable m)
+     , JS.IsElement (RawElement (DomBuilderSpace m))
+     )
+  => PopupConfig t
+  -> m [a]
+  -> m ()
+
+popup cfg elems = do
+  -- first let's do a container
+  -- FIXME(Elaine): did reflex ever have a builtin way to generate fresh names?
+  let attrs =
+        do
+          isVisible :: Bool <- _popupConfig_visible cfg
+          pure $ "class" =: ("popup" <> if isVisible then " show" else "")
+  _ <- elDynAttr "div" (attrs) $ do
+    simpleList (pure [123]) (const elems)
+
+  pure undefined

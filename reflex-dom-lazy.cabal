@@ -19,11 +19,12 @@ common warnings
 
 library
     import:           warnings
-    exposed-modules:  Reflex.Dom.Lazy.List
+    exposed-modules:  Reflex.Dom.Dropdown
     build-depends:    base,
                       containers,
                       ghcjs-dom,
                       jsaddle,
+                      jsaddle-dom,
                       reflex-dom-core,
                       reflex-dom-attrs,
                       text
