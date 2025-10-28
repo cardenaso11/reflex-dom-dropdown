@@ -16,6 +16,7 @@ and works as though the entire list is rendered.
 
 > {-# Language OverloadedStrings #-}
 > {-# Language RecursiveDo #-}
+> {-# Language TypeApplications #-}
 > import Reflex.Dom
 > import Reflex.Dom.Attrs
 > import Reflex.Dom.Dropdown
@@ -24,6 +25,7 @@ and works as though the entire list is rendered.
 > import qualified Data.Text as T
 > main :: IO ()
 > main = mainWidget $ do
+>  (popup (PopupConfig (pure True)) (fmap (pure @[]) $ text "Text inside popup"))
 >  el "style" $ text $ T.unlines
 >    [ ".flex { display: flex; }"
 >    , ".flex-col { flex-direction: column; }"
