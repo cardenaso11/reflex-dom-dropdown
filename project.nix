@@ -43,28 +43,29 @@ in {
         export TMPDIR=/tmp
         export TMP=/tmp
         export TEMP=/tmp
+        EM_CACHE=$(mktemp -d -t emcache-ghcjs-XXXXXX)
       ''
-      + lib.optionalString
-          pkgs.stdenv.hostPlatform.isGhcjs
-          # false
-          ''
-        if [ -z "$EM_CACHE" ]; then
-          # Create a unique temporary directory using mktemp
-          EM_CACHE_DIR=$(mktemp -d -t emcache-ghcjs-XXXXXX)
+      # + lib.optionalString
+      #     pkgs.stdenv.hostPlatform.isGhcjs
+          
+      #     ''
+      #   if [ -z "$EM_CACHE" ]; then
+      #     # Create a unique temporary directory using mktemp
+      #     EM_CACHE_DIR=$(mktemp -d -t emcache-ghcjs-XXXXXX)
 
-          # Copy the default Emscripten cache contents to the temporary directory
-          DEFAULT_EM_CACHE="${pkgs.pkgsBuildBuild.emscripten}/share/emscripten/cache"
-          if [ -d "$DEFAULT_EM_CACHE" ]; then
-            cp -r "$DEFAULT_EM_CACHE"/* "$EM_CACHE_DIR" 2>/dev/null || true
-            chmod -R u+w "$EM_CACHE_DIR"
-          fi
+      #     # Copy the default Emscripten cache contents to the temporary directory
+      #     DEFAULT_EM_CACHE="${pkgs.pkgsBuildBuild.emscripten}/share/emscripten/cache"
+      #     if [ -d "$DEFAULT_EM_CACHE" ]; then
+      #       cp -r "$DEFAULT_EM_CACHE"/* "$EM_CACHE_DIR" 2>/dev/null || true
+      #       chmod -R u+w "$EM_CACHE_DIR"
+      #     fi
 
-          export EM_CACHE="$EM_CACHE_DIR"
-          echo "Set EM_CACHE to $EM_CACHE"
-        else
-          echo "EM_CACHE already set to $EM_CACHE"
-        fi
-      ''
+      #     export EM_CACHE="$EM_CACHE_DIR"
+      #     echo "Set EM_CACHE to $EM_CACHE"
+      #   else
+      #     echo "EM_CACHE already set to $EM_CACHE"
+      #   fi
+      # ''
     );
     #TODO: Move this elsewhere?
     inputsFrom = [(pkgs.mkShell {
