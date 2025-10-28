@@ -37,13 +37,17 @@ in {
     # The TMP thing is necessary for vscode devcontainer, which starts up a nix-shell, sets the env variable in that
     # There's probably a way to do it without that
     # The optional string bit is cut verbatim from hnix: https://github.com/input-output-hk/haskell.nix/blob/e34dc3262c41fee2eb1e076475705e3e5e4b1450/modules/shell.nix#L67
+    # I'm not sure if pkgs will get the correct version, actually
     shellHook = lib.mkForce (
       ''
         export TMPDIR=/tmp
         export TMP=/tmp
         export TEMP=/tmp
       ''
-      + lib.optionalString pkgs.stdenv.hostPlatform.isGhcjs ''
+      + lib.optionalString
+          pkgs.stdenv.hostPlatform.isGhcjs
+          # false
+          ''
         if [ -z "$EM_CACHE" ]; then
           # Create a unique temporary directory using mktemp
           EM_CACHE_DIR=$(mktemp -d -t emcache-ghcjs-XXXXXX)

@@ -25,6 +25,7 @@ library
                       ghcjs-dom,
                       jsaddle,
                       jsaddle-dom,
+                      reflex-dom,
                       reflex-dom-core,
                       reflex-dom-attrs,
                       text

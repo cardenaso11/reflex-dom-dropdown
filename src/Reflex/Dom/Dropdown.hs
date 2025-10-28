@@ -1,3 +1,4 @@
+{-# LANGUAGE TypeApplications #-}
 {-# Language DerivingStrategies #-}
 {-# Language FlexibleContexts #-}
 {-# Language OverloadedStrings #-}
@@ -35,6 +36,9 @@ import Reflex.Dom.Core
       simpleList,
       display,
       DomSpace(RawElement) )
+
+--FIXME(Elaine): debug
+import Reflex.Dom (mainWidget)
 
 -- | Information about the current scroll state of a lazy list
 data ScrollInfo = ScrollInfo
@@ -190,4 +194,7 @@ popup cfg elems = do
   _ <- elDynAttr "div" (attrs) $ do
     simpleList (pure [123]) (const elems)
 
-  pure undefined
+  pure ()
+
+main2 :: IO ()
+main2 = mainWidget (popup (PopupConfig (pure True)) (fmap (pure @[]) $ text "Text inside popup"))
