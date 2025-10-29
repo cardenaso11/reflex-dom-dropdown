@@ -43,7 +43,7 @@ in {
         export TMPDIR=/tmp
         export TMP=/tmp
         export TEMP=/tmp
-        EM_CACHE=$(mktemp -d -t emcache-ghcjs-XXXXXX)
+        export EM_CACHE=$(mktemp -d -t emcache-ghcjs-XXXXXX)
       ''
       # + lib.optionalString
       #     pkgs.stdenv.hostPlatform.isGhcjs
