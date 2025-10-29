@@ -23,11 +23,13 @@ and works as though the entire list is rendered.
 > import Reflex.Dom.Tables
 > import qualified Data.Map as Map
 > import qualified Data.Text as T
+> -- style = ".popup-exterior .popup-interior { visibility: hidden; } .popup-exterior .show { visibility: visible; -webkit-animation: fadeIn 1s; animation: fadeIn 1s }"
+
 > main :: IO ()
 > main = mainWidget $ do
 >  buttonToggleE <- button "Click to toggle popup" 
 >  isVisibleD <- foldDyn (const not) False $ fmap (const True) buttonToggleE
->  (popup (PopupConfig isVisibleD) (fmap (pure @[]) $ text "Text inside popup"))
+>  (popup (PopupConfig isVisibleD extraShow extraStyle False "" "color:blue" "sample-identifier" (pure [()])) (const $ fmap (pure @[]) $ text "Text inside popup"))
 >  el "style" $ text $ T.unlines
 >    [ ".flex { display: flex; }"
 >    , ".flex-col { flex-direction: column; }"
