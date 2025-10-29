@@ -38,12 +38,15 @@ in {
     # There's probably a way to do it without that
     # The optional string bit is cut verbatim from hnix: https://github.com/input-output-hk/haskell.nix/blob/e34dc3262c41fee2eb1e076475705e3e5e4b1450/modules/shell.nix#L67
     # I'm not sure if pkgs will get the correct version, actually
+    # nix-shell seems to normally set TEMPDIR presumably to delete it after it's closed
+    # we could emulate this instead of setting it to /tmp... but it doesn't seem that useful?
+    # NOTE: If we ever get /tmp/ pollution issues we could try to set this to an ephemeral directory, maybe one that attempts to gets cleared automatically with trap...
+    # But frankly I don't understand why nix-shell needs at all to set TEMPDIR and friends
     shellHook = lib.mkForce (
       ''
         export TMP=/tmp
         export TMPDIR=/tmp
         export TEMP=/tmp
-        export TEMPDIR=/tmp
         export EM_CACHE=$(mktemp -d -t emcache-ghcjs-XXXXXX)
       ''
       # + lib.optionalString
