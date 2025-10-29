@@ -28,8 +28,8 @@ in {
     packages = ps: with ps; [
       reflex-dom-lazy
     ];
-    withHaddock = false;
-    withHoogle = false;
+    withHaddock = true;
+    withHoogle = true;
     tools = {
       haskell-language-server = {};
     };

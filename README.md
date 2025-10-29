@@ -25,7 +25,9 @@ and works as though the entire list is rendered.
 > import qualified Data.Text as T
 > main :: IO ()
 > main = mainWidget $ do
->  (popup (PopupConfig (pure True)) (fmap (pure @[]) $ text "Text inside popup"))
+>  buttonToggleE <- button "Click to toggle popup" 
+>  isVisibleD <- foldDyn (const not) False $ fmap (const True) buttonToggleE
+>  (popup (PopupConfig isVisibleD) (fmap (pure @[]) $ text "Text inside popup"))
 >  el "style" $ text $ T.unlines
 >    [ ".flex { display: flex; }"
 >    , ".flex-col { flex-direction: column; }"
