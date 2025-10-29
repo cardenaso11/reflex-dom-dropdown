@@ -40,9 +40,10 @@ in {
     # I'm not sure if pkgs will get the correct version, actually
     shellHook = lib.mkForce (
       ''
-        export TMPDIR=/tmp
         export TMP=/tmp
+        export TMPDIR=/tmp
         export TEMP=/tmp
+        export TEMPDIR=/tmp
         export EM_CACHE=$(mktemp -d -t emcache-ghcjs-XXXXXX)
       ''
       # + lib.optionalString
