@@ -19,14 +19,14 @@ in {
     "reflex-dom-tables" = deps.reflex-dom-tables;
   };
 
-  name = "reflex-dom-lazy";
+  name = "reflex-dom-dropdown";
   src = ./.;
   compiler-nix-name = "ghc912";
 
   shell = {
     crossPlatforms = ps: with ps; [ ghcjs ];
     packages = ps: with ps; [
-      reflex-dom-lazy
+      reflex-dom-dropdown
     ];
     withHaddock = true;
     withHoogle = true;
