@@ -1,4 +1,4 @@
-reflex-dom-dropdown
+reflex-dom-popup
 ===============
 
 Not actually a dropdown specific, but a popup. Use anywhere you normally use popups.
@@ -21,7 +21,7 @@ Below is an example of using the popup, toggled by a simple button.
 > import qualified Data.Text as T
 
 > main :: IO ()
-> main = mainWidget $ do
+> main = mainWidgetWithCss extraStyle $ do
 >  text "The dropdown below lets you toggle the visibility of the popup."
 >  buttonToggleE <- button "Click to toggle popup" 
 >  isVisibleD <- foldDyn (const not) False $ fmap (const True) buttonToggleE
@@ -29,19 +29,16 @@ Below is an example of using the popup, toggled by a simple button.
 >  popup
 >      PopupConfig
 >        { _popupConfig_visible = isVisibleD
->        , _popupConfig_extraShow = extraShow
->        , _popupConfig_extraStyle = extraStyle
+> --        , _popupConfig_extraShow = extraShow
 >        , _popupConfig_hiddenOrNone = False
->        , _popupConfig_extraInterior = ""
->        , _popupConfig_extraExterior = "color: blue"
+>        , _popupConfig_extraInterior = pure $ mempty
+>        , _popupConfig_extraExterior = pure $ mconcat ["color" =: "blue", "-webkit-animation" =: "fadeIn 1s", "animation" =: "fadeIn 1s"]
 >        , _popupConfig_identifier = "sample-identifier"
->        , _popupConfig_state = pure [()]
 >        }
->      (const $ do
+>      (do
 >        text "Text inside popup")
 >  text "This is some text that immediately follows the popup, later in the page"
 >  text "This is some more text"
->
 
 ```
 

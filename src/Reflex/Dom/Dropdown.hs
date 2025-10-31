@@ -24,11 +24,15 @@ import Reflex.Dom.Core
       (=:),
       elDynAttr,
       simpleList,
-      DomSpace(RawElement) )
+      DomSpace(RawElement), SpiderHost )
+import Data.ByteString (ByteString)
+import qualified Data.Map as M
 
 --FIXME(Elaine): debug
-import Reflex.Dom (mainWidget)
+import Reflex.Dom (mainWidget, ffor2)
 import Control.Monad (void)
+import Reflex.Dom (ffor)
+import Data.Map (Map)
 
 -- | Information about the current scroll state of a lazy list
 data ScrollInfo = ScrollInfo
@@ -46,18 +50,17 @@ data ScrollInfo = ScrollInfo
   deriving stock (Show)
 
 --TODO(Elaine): Probably should reorganize and document these fields
-data PopupConfig t state = PopupConfig
+data PopupConfig t = PopupConfig
   { _popupConfig_visible :: Dynamic t Bool
-  , _popupConfig_extraShow :: Text
-  , _popupConfig_extraStyle :: Text
+  -- , _popupConfig_extraShow :: Text
+  -- , _popupConfig_extraStyle :: Text
   , _popupConfig_hiddenOrNone :: Bool
   --TODO(Elaine): hange hiddenornone?
-  , _popupConfig_extraInterior :: Text
+  , _popupConfig_extraInterior :: Dynamic t (Map Text Text)
   --TODO(Elaine): should extraInterior exist if we have extraStyle?
-  , _popupConfig_extraExterior :: Text
+  , _popupConfig_extraExterior :: Dynamic t (Map Text Text)
   --TODO(Elaine): should extraExterior exist if we have extraStyle?
   , _popupConfig_identifier :: Text
-  , _popupConfig_state :: Dynamic t [state]
   }
 
 popup
@@ -69,32 +72,44 @@ popup
      , TriggerEvent t m
      , MonadIO (Performable m)
      , MonadJSM (Performable m)
-     , JS.IsElement (RawElement (DomBuilderSpace m)), Eq state
+     , JS.IsElement (RawElement (DomBuilderSpace m))
      )
-  => PopupConfig t state
-  -> (Dynamic t state -> m a)
-  -> m (Dynamic t [a])
+  => PopupConfig t
+  -> m a
+  -> m a
 
-popup cfg renderOne = do
-  el "style" $ text $ mconcat
-    [ "#", _popupConfig_identifier cfg, ".popup-exterior .popup-interior { ", if _popupConfig_hiddenOrNone cfg then "visibility: hidden;" else "display: none;", _popupConfig_extraInterior cfg <> " } "
-    , "#", _popupConfig_identifier cfg, ".popup-exterior .show { visibility: visible; display: block; "
-    , _popupConfig_extraShow cfg
-    , " }"
-    , "#", _popupConfig_identifier cfg, ".popup-exterior { ",  _popupConfig_extraExterior cfg, " } "
-    , _popupConfig_extraStyle cfg
-    ]
-  let attrsExterior = pure $ "class" =: "popup-exterior" <> "id" =: _popupConfig_identifier cfg
+popup cfg widget = do
+  -- el "style" $ text $ mconcat
+  --   [ "#", _popupConfig_identifier cfg, ".popup-exterior .popup-interior { ", if _popupConfig_hiddenOrNone cfg then "visibility: hidden;" else "display: none;", _popupConfig_extraInterior cfg <> " } "
+  --   , "#", _popupConfig_identifier cfg, ".popup-exterior .show { visibility: visible; display: block; "
+  --   , _popupConfig_extraShow cfg
+  --   , " }"
+  --   , "#", _popupConfig_identifier cfg, ".popup-exterior { ",  _popupConfig_extraExterior cfg, " } "
+  --   ]
+  let attrsExterior = ffor (_popupConfig_extraExterior cfg) $ \extraExterior -> mconcat $
+        [ "class" =: "popup-exterior"
+        , "id" =: _popupConfig_identifier cfg
+        , "visibility" =: "visible"
+        , "display" =: "block"
+        , extraExterior
+        ]
       attrsInterior =
         do
-          isVisible :: Bool <- _popupConfig_visible cfg
-          pure $ "class" =: ("popup-interior" <> if isVisible then " show" else "")
+          -- isVisible :: Bool <- _popupConfig_visible cfg
+          ffor2 (_popupConfig_extraInterior cfg) (_popupConfig_visible cfg) $ \extraInterior isVisible -> mconcat $
+            [ "class" =: ("popup-interior" <> if isVisible then " show" else "")
+            , "style" =: (if _popupConfig_hiddenOrNone cfg
+                then "visibility: hidden;"
+                else "display: none; ") -- <> extraInterior
+            -- , extraInterior
+            ]
   elDynAttr "div" attrsExterior $ do
     elDynAttr "div" attrsInterior $ do
-      simpleList (_popupConfig_state cfg) renderOne
+      widget
 
 
 extraShow = "-webkit-animation: fadeIn 1s; animation: fadeIn 1s;"
+extraStyle :: ByteString
 extraStyle = """/* Add animation (fade in the popup) */
 @-webkit-keyframes fadeIn {
   from {opacity: 0;}
@@ -109,14 +124,13 @@ demo = mainWidget $ void
   ( popup
     PopupConfig
       { _popupConfig_visible = pure True
-      , _popupConfig_extraShow = extraShow
-      , _popupConfig_extraStyle = extraStyle
+      -- , _popupConfig_extraShow = extraShow
+      -- , _popupConfig_extraStyle = extraStyle
       , _popupConfig_hiddenOrNone = False
-      , _popupConfig_extraInterior = ""
-      , _popupConfig_extraExterior = "color: blue"
+      , _popupConfig_extraInterior = mempty
+      , _popupConfig_extraExterior = pure $ "color" =: "blue"
       , _popupConfig_identifier = "sample-identifier"
-      , _popupConfig_state = pure [()]
       }
-    (const $ do
+    (do
       text "Text inside popup")
   )
