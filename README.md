@@ -22,38 +22,6 @@ Below is an example of using the popup, toggled by a simple button.
 > import Control.Monad (void)
 
 > main :: IO ()
->-- main = mainWidgetWithCss extraStyle $ do
->--  text "The dropdown below lets you toggle the visibility of the popup."
->--  buttonToggleE <- button "Click to toggle popup" 
->--  isVisibleD <- foldDyn (const not) False $ fmap (const True) buttonToggleE
->-- --  (popup (PopupConfig isVisibleD extraShow extraStyle False "" "color:blue" "sample-identifier" (pure [()])) (const $ fmap (pure @[]) $ text "Text inside popup"))
->--  popup
->--      PopupConfig
->--        { _popupConfig_visible = isVisibleD
->-- --        , _popupConfig_extraShow = extraShow
->--        , _popupConfig_hiddenOrNone = False
->--        , _popupConfig_extraInterior = pure $ mempty
->--        , _popupConfig_extraExterior = pure $ mconcat ["color" =: "blue", "-webkit-animation" =: "fadeIn 1s", "animation" =: "fadeIn 1s"]
->--        , _popupConfig_identifier = "sample-identifier"
->--        }
->--      (do
->--        text "Text inside popup")
->--  text "This is some text that immediately follows the popup, later in the page"
->--  text "This is some more text"
->-- main = mainWidgetWithCss extraStyle (void
->--   ( popup
->--     PopupConfig
->--       { _popupConfig_visible = pure True
->--       -- , _popupConfig_extraShow = extraShow
->--       -- , _popupConfig_extraStyle = extraStyle
->--       , _popupConfig_hiddenOrNone = False
->--       , _popupConfig_extraInterior = mempty
->--       , _popupConfig_extraExterior = pure $ "color" =: "blue"
->--       , _popupConfig_identifier = "sample-identifier"
->--       }
->--     (do
->--       text "Text inside popup")
->--   ))
 > main = mainWidgetWithCss extraStyle etc
 
 

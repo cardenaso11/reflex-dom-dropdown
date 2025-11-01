@@ -5,7 +5,13 @@
 {-# Language RecursiveDo #-}
 {-# Language ScopedTypeVariables #-}
 {-# LANGUAGE MultilineStrings #-}
-module Reflex.Dom.Dropdown where
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+{-# HLINT ignore "Use fewer imports" #-}
+module Reflex.Dom.Dropdown (
+  PopupConfig(..),
+  popup,
+)
+where
 
 import Control.Monad.Fix
 import Control.Monad.IO.Class
@@ -14,42 +20,21 @@ import qualified GHCJS.DOM.Element as JS
 import Language.Javascript.JSaddle
 import Reflex.Dom.Core
     ( DomBuilder(DomBuilderSpace),
-      MonadHold(holdDyn),
+      MonadHold(),
       PostBuild(..),
       PerformEvent(Performable),
       TriggerEvent,
       Reflex(Dynamic),
-      el,
       text,
       (=:),
-      elDynAttr,
-      DomSpace(RawElement), mainWidget, mainWidgetWithCss)
+      DomSpace(RawElement), mainWidgetWithCss)
 import Data.ByteString (ByteString)
 import qualified Data.Map as M
 import Reflex.Dom.Attrs
 
---FIXME(Elaine): debug
-import Reflex.Dom ( ffor2, dynText, constDyn, button, foldDyn, def)
-import Control.Monad (void)
+import Reflex.Dom ( button, foldDyn, def)
 import Reflex.Dom (ffor)
-import Data.Map (Map)
-import qualified Data.Text as T
 import Language.Javascript.JSaddle.Warp (run)
-
--- | Information about the current scroll state of a lazy list
-data ScrollInfo = ScrollInfo
-  { _scrollInfo_topIndex :: Int
-  -- ^ The index of the first visible row
-  , _scrollInfo_numberOfElements :: Int
-  -- ^ The number of rows needed to fill the viewport (with some buffer)
-  , _scrollInfo_paddingTop :: Double
-  -- ^ The pixel size of the padding needed above the first visible row to
-  -- maintain the correct scrollbar size and scroll positioning.
-  , _scrollInfo_paddingBottom :: Double
-  -- ^ The pixel size of the padding needed above the first visible row to
-  -- maintain the correct scrollbar size and scroll positioning.
-  }
-  deriving stock (Show)
 
 data PopupConfig t m = PopupConfig
   { _popupConfig_identifier :: Text
@@ -69,7 +54,6 @@ popup
      , TriggerEvent t m
      , MonadIO (Performable m)
      , MonadJSM (Performable m)
-     , JS.IsElement (RawElement (DomBuilderSpace m))
      )
   => PopupConfig t m
   -> m a
@@ -81,12 +65,8 @@ popup cfg widget = do
       attrsExterior =
         [ "class" ~: "popup-exterior"
         , "id" ~: _popupConfig_identifier cfg
-        -- , "style" ~: mconcat ["visibility:visible;" , "display:block;"]
         ] ++ _popupConfig_extraExterior cfg
 
-      -- thing1 :: m (Dynamic t Bool)
-      -- thing1 = (pure $ _popupConfig_visible cfg)
-      -- thing2 = (foldAttrs Nothing $ _popupConfig_extraOnShow cfg)
       attrsInterior :: [Attrs t m]
       attrsInterior =
         [ "class" ~: ffor (_popupConfig_visible cfg) (\isVisible -> if isVisible then "show" else "")
@@ -94,7 +74,7 @@ popup cfg widget = do
         , "style" ~:
         ffor (_popupConfig_visible cfg) (\isVisible -> 
             case (isVisible, _popupConfig_hiddenOrNone cfg) of
-              (True, _) -> M.fromList [("visibility", "visible"), ("display", "block")] <> _popupConfig_extraOnShow cfg
+              (True, _) -> M.fromList [("visibility", "visible"), ("display", "interior-block")] <> _popupConfig_extraOnShow cfg
               (False, True) -> M.singleton "visibility" "hidden"
               (False, False) -> M.singleton "display" "none" 
             )
@@ -116,9 +96,9 @@ extraStyle = """/* Add animation (fade in the popup) */
   from {opacity: 0;}
   to {opacity:1 ;}
 }"""
-demo = run 1234 $ mainWidgetWithCss extraStyle etc
+demo = run 1234 $ mainWidgetWithCss extraStyle demoWidget
 
-etc :: ( DomBuilder t m
+demoWidget :: ( DomBuilder t m
      , MonadFix m
      , MonadHold t m
      , PostBuild t m
@@ -128,7 +108,7 @@ etc :: ( DomBuilder t m
      , MonadJSM (Performable m)
      , JS.IsElement (RawElement (DomBuilderSpace m))
      ) => m ()
-etc = do
+demoWidget = do
   text "The dropdown below lets you toggle the visibility of the popup."
   buttonToggleE <- button "Click to toggle popup"
   isVisibleD <- foldDyn (const not) False $ fmap (const True) buttonToggleE
