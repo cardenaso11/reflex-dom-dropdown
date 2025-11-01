@@ -14,7 +14,7 @@ import qualified GHCJS.DOM.Element as JS
 import Language.Javascript.JSaddle
 import Reflex.Dom.Core
     ( DomBuilder(DomBuilderSpace),
-      MonadHold(),
+      MonadHold(holdDyn),
       PostBuild(..),
       PerformEvent(Performable),
       TriggerEvent,
@@ -23,16 +23,18 @@ import Reflex.Dom.Core
       text,
       (=:),
       elDynAttr,
-      simpleList,
-      DomSpace(RawElement), SpiderHost )
+      DomSpace(RawElement), mainWidget, mainWidgetWithCss)
 import Data.ByteString (ByteString)
 import qualified Data.Map as M
+import Reflex.Dom.Attrs
 
 --FIXME(Elaine): debug
-import Reflex.Dom (mainWidget, ffor2)
+import Reflex.Dom ( ffor2, dynText, constDyn, button, foldDyn, def)
 import Control.Monad (void)
 import Reflex.Dom (ffor)
 import Data.Map (Map)
+import qualified Data.Text as T
+import Language.Javascript.JSaddle.Warp (run)
 
 -- | Information about the current scroll state of a lazy list
 data ScrollInfo = ScrollInfo
@@ -49,22 +51,17 @@ data ScrollInfo = ScrollInfo
   }
   deriving stock (Show)
 
---TODO(Elaine): Probably should reorganize and document these fields
-data PopupConfig t = PopupConfig
-  { _popupConfig_visible :: Dynamic t Bool
-  -- , _popupConfig_extraShow :: Text
-  -- , _popupConfig_extraStyle :: Text
+data PopupConfig t m = PopupConfig
+  { _popupConfig_identifier :: Text
+  , _popupConfig_visible :: Dynamic t Bool
   , _popupConfig_hiddenOrNone :: Bool
-  --TODO(Elaine): hange hiddenornone?
-  , _popupConfig_extraInterior :: Dynamic t (Map Text Text)
-  --TODO(Elaine): should extraInterior exist if we have extraStyle?
-  , _popupConfig_extraExterior :: Dynamic t (Map Text Text)
-  --TODO(Elaine): should extraExterior exist if we have extraStyle?
-  , _popupConfig_identifier :: Text
+  , _popupConfig_extraInterior :: [Attrs t m]
+  , _popupConfig_extraExterior :: [Attrs t m]
+  , _popupConfig_extraOnShow :: M.Map Text Text
   }
 
 popup
-  :: ( DomBuilder t m
+  :: forall t m a . ( DomBuilder t m
      , MonadFix m
      , MonadHold t m
      , PostBuild t m
@@ -74,37 +71,36 @@ popup
      , MonadJSM (Performable m)
      , JS.IsElement (RawElement (DomBuilderSpace m))
      )
-  => PopupConfig t
+  => PopupConfig t m
   -> m a
   -> m a
 
 popup cfg widget = do
-  -- el "style" $ text $ mconcat
-  --   [ "#", _popupConfig_identifier cfg, ".popup-exterior .popup-interior { ", if _popupConfig_hiddenOrNone cfg then "visibility: hidden;" else "display: none;", _popupConfig_extraInterior cfg <> " } "
-  --   , "#", _popupConfig_identifier cfg, ".popup-exterior .show { visibility: visible; display: block; "
-  --   , _popupConfig_extraShow cfg
-  --   , " }"
-  --   , "#", _popupConfig_identifier cfg, ".popup-exterior { ",  _popupConfig_extraExterior cfg, " } "
-  --   ]
-  let attrsExterior = ffor (_popupConfig_extraExterior cfg) $ \extraExterior -> mconcat $
-        [ "class" =: "popup-exterior"
-        , "id" =: _popupConfig_identifier cfg
-        , "visibility" =: "visible"
-        , "display" =: "block"
-        , extraExterior
-        ]
+  let
+      attrsExterior :: [Attrs t m]
+      attrsExterior =
+        [ "class" ~: "popup-exterior"
+        , "id" ~: _popupConfig_identifier cfg
+        -- , "style" ~: mconcat ["visibility:visible;" , "display:block;"]
+        ] ++ _popupConfig_extraExterior cfg
+
+      -- thing1 :: m (Dynamic t Bool)
+      -- thing1 = (pure $ _popupConfig_visible cfg)
+      -- thing2 = (foldAttrs Nothing $ _popupConfig_extraOnShow cfg)
+      attrsInterior :: [Attrs t m]
       attrsInterior =
-        do
-          -- isVisible :: Bool <- _popupConfig_visible cfg
-          ffor2 (_popupConfig_extraInterior cfg) (_popupConfig_visible cfg) $ \extraInterior isVisible -> mconcat $
-            [ "class" =: ("popup-interior" <> if isVisible then " show" else "")
-            , "style" =: (if _popupConfig_hiddenOrNone cfg
-                then "visibility: hidden;"
-                else "display: none; ") -- <> extraInterior
-            -- , extraInterior
-            ]
-  elDynAttr "div" attrsExterior $ do
-    elDynAttr "div" attrsInterior $ do
+        [ "class" ~: ffor (_popupConfig_visible cfg) (\isVisible -> if isVisible then "show" else "")
+        , "class" ~: "popup-interior"
+        , "style" ~:
+        ffor (_popupConfig_visible cfg) (\isVisible -> 
+            case (isVisible, _popupConfig_hiddenOrNone cfg) of
+              (True, _) -> M.fromList [("visibility", "visible"), ("display", "block")] <> _popupConfig_extraOnShow cfg
+              (False, True) -> M.singleton "visibility" "hidden"
+              (False, False) -> M.singleton "display" "none" 
+            )
+        ] ++ _popupConfig_extraInterior cfg
+  elAttrs "div" attrsExterior $ do
+    elAttrs "div" attrsInterior $ do
       widget
 
 
@@ -120,17 +116,36 @@ extraStyle = """/* Add animation (fade in the popup) */
   from {opacity: 0;}
   to {opacity:1 ;}
 }"""
-demo = mainWidget $ void
-  ( popup
-    PopupConfig
-      { _popupConfig_visible = pure True
-      -- , _popupConfig_extraShow = extraShow
-      -- , _popupConfig_extraStyle = extraStyle
-      , _popupConfig_hiddenOrNone = False
-      , _popupConfig_extraInterior = mempty
-      , _popupConfig_extraExterior = pure $ "color" =: "blue"
-      , _popupConfig_identifier = "sample-identifier"
-      }
-    (do
-      text "Text inside popup")
-  )
+demo = run 1234 $ mainWidgetWithCss extraStyle etc
+
+etc :: ( DomBuilder t m
+     , MonadFix m
+     , MonadHold t m
+     , PostBuild t m
+     , PerformEvent t m
+     , TriggerEvent t m
+     , MonadIO (Performable m)
+     , MonadJSM (Performable m)
+     , JS.IsElement (RawElement (DomBuilderSpace m))
+     ) => m ()
+etc = do
+  text "The dropdown below lets you toggle the visibility of the popup."
+  buttonToggleE <- button "Click to toggle popup"
+  isVisibleD <- foldDyn (const not) False $ fmap (const True) buttonToggleE
+  popup
+      PopupConfig
+        { _popupConfig_visible = isVisibleD
+        , _popupConfig_hiddenOrNone = True
+        , _popupConfig_extraInterior = pure $ mempty
+        , _popupConfig_extraExterior = pure $ def {attrs_style=mconcat
+            [ "color" =: "blue"]}
+        , _popupConfig_extraOnShow = M.fromList
+            [ ("-webkit-animation", "fadeIn 1s")
+            , ("animation", "fadeIn 1s")
+            ]
+        , _popupConfig_identifier = "sample-identifier"
+        }
+      (do
+        text "Text inside popup")
+  text "This is some text that immediately follows the popup, later in the page"
+  text "This is some more text"
