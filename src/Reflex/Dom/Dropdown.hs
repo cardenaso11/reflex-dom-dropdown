@@ -29,17 +29,17 @@ import Reflex.Dom (ffor)
 
 data PopupConfig t m = PopupConfig
   { _popupConfig_identifier :: Text
-  -- Applied to exterior div
+  -- ^ Applied to exterior div
   , _popupConfig_visible :: Dynamic t Bool
-  -- Immediately show or hide the popup
+  -- ^ Immediately show or hide the popup
   , _popupConfig_hiddenOrNone :: Bool
-  -- True = use visibility:hidden when not visible, False = use display:none when not visible
+  -- ^ True = use visibility:hidden when not visible, False = use display:none when not visible
   , _popupConfig_extraInterior :: [Attrs t m]
-  -- Convenience field that adds extra attributes to the interior content div, which has class popup-interior
+  -- ^ Convenience field that adds extra attributes to the interior content div, which has class popup-interior
   , _popupConfig_extraExterior :: [Attrs t m]
-  -- Convenience field that adds extra attributes to the popup container div, which has class popup-exterior
+  -- ^ Convenience field that adds extra attributes to the popup container div, which has class popup-exterior
   , _popupConfig_extraStyleOnShow :: M.Map Text Text
-  -- Convenience field that adds extra styling when the popup is visible, which has class show.
+  -- ^ Convenience field that adds extra styling when the popup is visible, which has class show.
   -- If you need fade out effects or a more in-depth lifecycle, use _popupConfig_extraInterior and _popupConfig_extraExterior
   }
 
