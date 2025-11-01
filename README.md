@@ -13,16 +13,60 @@ Below is an example of using the popup, toggled by a simple button.
 > {-# Language OverloadedStrings #-}
 > {-# Language RecursiveDo #-}
 > {-# Language TypeApplications #-}
+> {-# Language MultilineStrings #-}
 > import Reflex.Dom
 > import Reflex.Dom.Attrs
 > import Reflex.Dom.Dropdown
-> import Reflex.Dom.Tables
-> import qualified Data.Map as Map
-> import qualified Data.Text as T
-> import Control.Monad (void)
+> import qualified Data.Map as M
+> import Data.ByteString (ByteString)
+> import Control.Monad.Fix (MonadFix)
 
 > main :: IO ()
-> main = mainWidgetWithCss extraStyle etc
+> main = mainWidgetWithCss extraStyle demoWidget
+
+> demoWidget :: ( DomBuilder t m
+>      , MonadFix m
+>      , MonadHold t m
+>      , PostBuild t m
+>      , PerformEvent t m
+>      , TriggerEvent t m
+>      ) => m ()
+> demoWidget = do
+>   text "The dropdown below lets you toggle the visibility of the popup."
+>   el "br" blank
+>   buttonToggleE <- button "Click to toggle popup"
+>   isVisibleD <- foldDyn (const not) False $ fmap (const True) buttonToggleE
+>   popup
+>       PopupConfig
+>         { _popupConfig_visible = isVisibleD
+>         , _popupConfig_hiddenOrNone = True
+>         , _popupConfig_extraInterior = mempty
+>         , _popupConfig_extraExterior = pure $ def {attrs_style=mconcat
+>             [ "color" =: "blue"]}
+>         , _popupConfig_extraStyleOnShow = M.fromList
+>             [ ("-webkit-animation", "fadeIn 1s")
+>             , ("animation", "fadeIn 1s")
+>             ]
+>         , _popupConfig_identifier = "sample-identifier"
+>         }
+>       (do
+>         text "Text inside popup")
+>   el "br" blank
+>   text "This is some text that immediately follows the popup, later in the page"
+>   el "br" blank
+>   text "This is some more text"
+> 
+> extraStyle :: ByteString
+> extraStyle = """/* Add animation (fade in the popup) */
+> @-webkit-keyframes fadeIn {
+>   from {opacity: 0;}
+>   to {opacity: 1;}
+> }
+> 
+> @keyframes fadeIn {
+>   from {opacity: 0;}
+>   to {opacity:1 ;}
+> }"""
 
 
 ```
